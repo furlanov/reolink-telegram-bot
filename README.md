@@ -4,8 +4,6 @@ Telegram notifications with snapshots for Reolink cameras. Self-hosted, no Reoli
 
 Connects directly to the camera over the Reolink Baichuan TCP push protocol, so alerts arrive sub-second without polling or email relay.
 
-The camera itself does all the detection. The bot just listens for push events the camera sends, grabs a snapshot, and forwards it.
-
 > **Tested on:** Reolink **RLC-810A** only. Other Reolink cameras that speak Baichuan and report detection events should work, but nothing else has been verified.
 
 ---
