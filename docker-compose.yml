@@ -1,0 +1,19 @@
+services:
+  rlbot:
+    build: .
+    container_name: rlbot
+    environment:
+      - BOT_TOKEN
+      - REGISTER_PASSWORD
+      - CAMERA_HOST
+      - CAMERA_USER
+      - CAMERA_PASS
+      - LOG_LEVEL=INFO
+      - TZ=Europe/Ljubljana
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
