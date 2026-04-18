@@ -4,14 +4,16 @@ Telegram notifications with snapshots for Reolink cameras. Self-hosted, no Reoli
 
 Connects directly to the camera over the Reolink Baichuan TCP push protocol, so alerts arrive sub-second without polling or email relay.
 
-> **Tested on:** Reolink **RLC-810A** only. Other Reolink cameras that speak Baichuan and expose AI detection should work, but nothing else has been verified.
+The camera itself does all the detection. The bot just listens for push events the camera sends, grabs a snapshot, and forwards it.
+
+> **Tested on:** Reolink **RLC-810A** only. Other Reolink cameras that speak Baichuan and report detection events should work, but nothing else has been verified.
 
 ---
 
 ## Features
 
-- Instant push via Reolink's native TCP push (Baichuan), not email or polling.
-- AI detections: person, vehicle, animal (dog/cat), plus motion.
+- Sub-second push via Reolink's native TCP push (Baichuan), not email or polling.
+- Forwards the camera's detection categories: person, vehicle, animal (dog/cat), and motion.
 - Each notification includes a fresh JPEG snapshot.
 - Multi-user — anyone with the registration password can `/start` to subscribe.
 - On-demand snapshots via `/snap`.
@@ -30,31 +32,61 @@ Connects directly to the camera over the Reolink Baichuan TCP push protocol, so 
 ```
 
 1. Bot connects to the camera on port 80 and subscribes to TCP push events.
-2. Camera pushes on AI/motion detection.
-3. Bot pulls a JPEG snapshot and broadcasts to every registered Telegram chat.
+2. Camera pushes whenever its on-board detection fires.
+3. Bot pulls a JPEG snapshot and broadcasts it to every registered Telegram chat.
 4. A long-polling Telegram handler manages `/start`, `/stop`, `/snap`, etc.
 
-## Quick start (Docker)
+## Setup
+
+### 1. Create a Telegram bot
+
+Message [@BotFather](https://t.me/BotFather) and send `/newbot`. Follow the prompts to pick a name and username. BotFather replies with a bot token — keep it for the next step.
+
+### 2. Clone the repo
 
 ```bash
 git clone https://github.com/furlanov/reolink-telegram-bot.git
 cd reolink-telegram-bot
-cp .env.example .env
-# edit .env with your camera + Telegram credentials
-docker compose up -d
 ```
 
-Logs: `docker logs -f rlbot`.
+### 3. Configure
 
-## Getting a Telegram bot token
+```bash
+cp .env.example .env
+```
 
-1. Message [@BotFather](https://t.me/BotFather), send `/newbot`.
-2. Pick a name and username. Paste the returned token into `.env` as `BOT_TOKEN`.
-3. Open a chat with your bot and send `/start <REGISTER_PASSWORD>`.
+Edit `.env`:
 
-## Configuration
+```
+CAMERA_HOST=192.168.1.72          # your camera's LAN IP
+CAMERA_USER=admin                 # camera login (default is admin)
+CAMERA_PASS=your_camera_password
+BOT_TOKEN=123456:ABC-...          # from BotFather
+REGISTER_PASSWORD=pick_something  # shared password users send to /start
+```
 
-Environment variables (see `.env.example`):
+Pick any value you like for `REGISTER_PASSWORD` — it's the shared secret that gates who can subscribe to notifications.
+
+### 4. Start it
+
+```bash
+docker compose up -d
+docker logs -f rlbot
+```
+
+You should see `Connected to RLC-810A` and `Subscribed to TCP push events`. If not, check the log line — most issues are wrong camera credentials or an unreachable camera IP.
+
+### 5. Subscribe in Telegram
+
+Open a chat with the bot you created and send:
+
+```
+/start your_register_password
+```
+
+The bot replies `Registered`. Trigger a detection in front of the camera — you should get a snapshot within a second. You're done.
+
+## Configuration reference
 
 | Variable            | Required | Description                                                  |
 | ------------------- | :------: | ------------------------------------------------------------ |
