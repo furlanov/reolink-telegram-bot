@@ -29,25 +29,36 @@ Connects directly to the camera over the Reolink Baichuan TCP push protocol, so 
 └──────────────┘ ◀──────────── └────────┘               └──────────┘
 ```
 
-1. Bot connects to the camera on port 80 and subscribes to TCP push events.
+1. Bot connects to the camera on port 443 (HTTPS) and subscribes to TCP push events on port 9000.
 2. Camera pushes whenever its on-board detection fires.
 3. Bot pulls a JPEG snapshot and broadcasts it to every registered Telegram chat.
 4. A long-polling Telegram handler manages `/start`, `/stop`, `/snap`, etc.
 
 ## Setup
 
-### 1. Create a Telegram bot
+### 1. Enable the required services on the camera
+
+In the Reolink web UI or mobile app, make sure the following are on (menu names are from the RLC-810A; other models are similar):
+
+- **HTTPS enabled (recommended).** `Settings → Network → Advanced → Server Settings → HTTPS`. The bot defaults to port 443 + HTTPS so the camera password isn't sent in cleartext over your LAN. If you can't enable HTTPS, set `CAMERA_USE_HTTPS=false` in `.env` to fall back to HTTP on port 80.
+- **Motion detection enabled.** `Settings → Surveillance → Motion Detection`.
+- **Smart detection enabled** for whichever categories you want alerts on — person, vehicle, animal. `Settings → Surveillance → Smart Detection` (also called "AI Detection" on some firmwares).
+- **A user account with admin rights**, since the login needs to read snapshots and receive push. The default `admin` account works.
+
+TCP push itself is always on as part of the camera's native protocol — there's no separate toggle for it.
+
+### 2. Create a Telegram bot
 
 Message [@BotFather](https://t.me/BotFather) and send `/newbot`. Follow the prompts to pick a name and username. BotFather replies with a bot token — keep it for the next step.
 
-### 2. Clone the repo
+### 3. Clone the repo
 
 ```bash
 git clone https://github.com/furlanov/reolink-telegram-bot.git
 cd reolink-telegram-bot
 ```
 
-### 3. Configure
+### 4. Configure
 
 ```bash
 cp .env.example .env
@@ -65,7 +76,7 @@ REGISTER_PASSWORD=pick_something  # shared password users send to /start
 
 Pick any value you like for `REGISTER_PASSWORD` — it's the shared secret that gates who can subscribe to notifications.
 
-### 4. Start it
+### 5. Start it
 
 ```bash
 docker compose up -d
@@ -74,7 +85,7 @@ docker logs -f rlbot
 
 You should see `Connected to RLC-810A` and `Subscribed to TCP push events`. If not, check the log line — most issues are wrong camera credentials or an unreachable camera IP.
 
-### 5. Subscribe in Telegram
+### 6. Subscribe in Telegram
 
 Open a chat with the bot you created and send:
 
@@ -91,6 +102,8 @@ The bot replies `Registered`. Trigger a detection in front of the camera — you
 | `CAMERA_HOST`       |    yes   | Camera IP address                                            |
 | `CAMERA_USER`       |    yes   | Camera username (usually `admin`)                            |
 | `CAMERA_PASS`       |    yes   | Camera password                                              |
+| `CAMERA_USE_HTTPS`  |          | `true` (default) or `false`. Turn off only if the camera can't serve HTTPS. |
+| `CAMERA_PORT`       |          | Override camera port. Defaults to `443` with HTTPS, `80` without. |
 | `BOT_TOKEN`         |    yes   | Telegram bot token from [@BotFather](https://t.me/BotFather) |
 | `REGISTER_PASSWORD` |    yes   | Shared password required to subscribe via `/start`           |
 | `LOG_LEVEL`         |          | `DEBUG`, `INFO` (default), `WARNING`, `ERROR`                |

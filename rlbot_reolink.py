@@ -21,6 +21,8 @@ from reolink_aio.api import Host
 CAMERA_HOST = os.environ.get("CAMERA_HOST", "192.168.1.72")
 CAMERA_USER = os.environ.get("CAMERA_USER", "admin")
 CAMERA_PASS = os.environ.get("CAMERA_PASS", "")
+CAMERA_USE_HTTPS = os.environ.get("CAMERA_USE_HTTPS", "true").lower() in ("true", "1", "yes")
+CAMERA_PORT = int(os.environ.get("CAMERA_PORT", "443" if CAMERA_USE_HTTPS else "80"))
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 REGISTER_PASSWORD = os.environ.get("REGISTER_PASSWORD", "")
 DATA_DIR = "/data"
@@ -181,7 +183,8 @@ class ReolinkBot:
                 host=CAMERA_HOST,
                 username=CAMERA_USER,
                 password=CAMERA_PASS,
-                port=80,
+                port=CAMERA_PORT,
+                use_https=CAMERA_USE_HTTPS,
             )
             await self.host.get_host_data()
             log.info("Connected to %s (%s)", self.host.nvr_name, CAMERA_HOST)
