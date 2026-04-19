@@ -17,7 +17,6 @@ Connects directly to the camera over the Reolink Baichuan TCP push protocol, so 
 - On-demand snapshots via `/snap`.
 - Per-event-type cooldown to suppress repeat alerts on the same subject.
 - Auto-reconnect with exponential backoff.
-- Single Python file, runs on a Raspberry Pi.
 - Docker Compose deploy.
 
 ## How it works
